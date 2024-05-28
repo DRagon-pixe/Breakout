@@ -1,4 +1,4 @@
-import { Actor, CollisionType, Color, Engine, Font, Text, vec } from "excalibur"
+import { Actor, CollisionType, Color, Engine, Font, FontUnit, Label, Loader, Sound, vec} from "excalibur"
 
 // 1 - Criar uma instancia de Engine, que representa o jogo
 const game = new Engine({
@@ -11,7 +11,7 @@ const barra = new Actor({
 	x: 150,
 	// game.drawHeight - altura do game
 	y: game.drawHeight - 40,
-	width: 200,
+	width: 250,
 	height: 20,
 	color: Color.Chartreuse,
 	name: "BarraJogador"
@@ -38,7 +38,7 @@ const bolinha = new Actor({
 bolinha.body.collisionType = CollisionType.Passive
 
 // 5 - Criar movimentação bolinha
-const velocidadeBolinha = vec(400, 400)
+const velocidadeBolinha = vec(450, 450)
 
 // Após 1 segundo (100ms), define a velocidade da bolinha em x e y = 100
 setTimeout(() => {
@@ -78,9 +78,9 @@ const xoffset = 65
 const yoffset = 20
 
 const colunas = 5
-const linhas = 3
+const linhas = 5
 
-const corBloco = [Color.Red, Color.Orange, Color.Yellow]
+const corBloco = [Color.Red, Color.Orange, Color.Yellow, Color.Green, Color.Blue]
 
 const larguraBloco = (game.drawWidth / colunas) - padding - (padding / colunas)
 const alturaBloco = 30
@@ -115,46 +115,79 @@ listaBloco.forEach( bloco => {
 	game.add(bloco)
 })
 
+// let pontos = 0
+
+// const textoPontos = new Text({
+// 	text: "Hello World",
+// 	font: new Font({ size: 30})
+// })
+
+// const objetoTexto = new Actor({
+// 	x: game.drawWidth - 80,
+// 	y: game.drawHeight - 15
+// })
+
+// objetoTexto.graphics.use(textoPontos)
+
+// game.add(objetoTexto)
+
+// Quando colidir, ativa o som
+const bateu = new Sound('./src/soound/BATER.wav');
+const dead = new Sound('./src/soound/Morreu.wav')
+const carrega = new Loader([bateu, dead])
+
 let pontos = 0
-
-const textoPontos = new Text({
-	text: "Hello World",
-	font: new Font({ size: 30})
+const textoPontos = new Label({
+	text: pontos.toString(),
+	font: new Font({
+		size: 40,
+		color: Color.White,
+		strokeColor: Color.Black,
+		unit: FontUnit.Px
+	}),
+	pos: vec(725, 525)
 })
 
-const objetoTexto = new Actor({
-	x: game.drawWidth - 80,
-	y: game.drawHeight - 15
-})
-
-objetoTexto.graphics.use(textoPontos)
-
-game.add(objetoTexto)
+game.add(textoPontos)
 
 let colidindo: boolean = false
 
 bolinha.on("collisionstart", (event) => {
 	// erificar se a bolinha colidiu com algum bloco destrutivel
 	// console.log("Colidiu com: ", event.other);
+
 	
 	// Se o elemento colidido for um bloco da lista de blocos (destrutivel)
 	if (listaBloco.includes(event.other)) {
 		// Destruir o bloco colidido
 		event.other.kill()
+		
+		// Adiciona um ponto
+		pontos++
+		
+		// Atualiza valor do placar - textoPontos
+		textoPontos.text = pontos.toString();
+		
+		bateu.play(1.0)
 	}
 
+	if (pontos >= 25) {
+		alert("Você venceu!!!")
+
+	}
+	
 	// Rebater a bolinha - Inverter as direções x e y
 	// "minimum translation vector" is a vector 'normalize()'
 	let interseccao = event.contact.mtv.normalize()
-
+	
 	// Se não tá colidindo
 	// colididindo == false => !colidindo
 	console.log("Colidindo:", colidindo);
 	
-
+	
 	if (!colidindo) {
 		colidindo = true
-
+		
 		// interseccao.x e interseccao.y
 		// O maior representa o eixo onde houve o contato
 		if ( Math.abs(interseccao.x) > Math.abs(interseccao.y)) {
@@ -177,14 +210,16 @@ bolinha.on("collisionend", () => {
 })
 
 // bolinha.on("collisionstart", () => {
-// 	console.log("colidiu")
-// })
-
-bolinha.on("exitviewport", () => {
-	alert("E MORREU")
-	window.location.reload()
-})
-
-
-// Inicia o game
-game.start()
+	// 	console.log("colidiu")
+	// })
+	
+	bolinha.on("exitviewport", () => {
+		dead.play(1.0)
+		alert("E MORREU")
+		window.location.reload()
+	})
+	
+	
+	// Inicia o game
+	
+	await game.start(carrega)
