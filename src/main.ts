@@ -19,6 +19,18 @@ const barra = new Actor({
 
 barra.body.collisionType = CollisionType.Fixed
 
+let coresBolinha = [
+	Color.Black,
+	Color.White,
+	Color.Yellow,
+	Color.Transparent,
+	Color.Red,
+	Color.Orange,
+	Color.Azure
+]
+
+let numeroCores = coresBolinha.length
+
 // Insere o Actor barra - player, no game
 game.add(barra)
 
@@ -29,7 +41,7 @@ game.input.pointers.primary.on("move", (event) => {
 
 // 4 - Criar o Actor bolinha
 const bolinha = new Actor({
-	x: 100,
+	x: Math.trunc(Math.random() * game.drawWidth),
 	y: 300,
 	radius: 10,
 	color: Color.Red
@@ -38,7 +50,7 @@ const bolinha = new Actor({
 bolinha.body.collisionType = CollisionType.Passive
 
 // 5 - Criar movimentação bolinha
-const velocidadeBolinha = vec(450, 450)
+const velocidadeBolinha = vec(750, 750)
 
 // Após 1 segundo (100ms), define a velocidade da bolinha em x e y = 100
 setTimeout(() => {
@@ -133,8 +145,9 @@ listaBloco.forEach( bloco => {
 
 // Quando colidir, ativa o som
 const bateu = new Sound('./src/soound/BATER.wav');
-const dead = new Sound('./src/soound/Morreu.wav')
-const carrega = new Loader([bateu, dead])
+const dead = new Sound('./src/soound/Morreu.wav');
+const victory = new Sound('./src/soound/Victory.wav')
+const carrega = new Loader([bateu, dead, victory])
 
 let pontos = 0
 const textoPontos = new Label({
@@ -164,6 +177,8 @@ bolinha.on("collisionstart", (event) => {
 		
 		// Adiciona um ponto
 		pontos++
+
+		bolinha.color = coresBolinha [Math.trunc( Math.random() * numeroCores)]
 		
 		// Atualiza valor do placar - textoPontos
 		textoPontos.text = pontos.toString();
@@ -172,8 +187,9 @@ bolinha.on("collisionstart", (event) => {
 	}
 
 	if (pontos >= 25) {
+		victory.play(1.0)
 		alert("Você venceu!!!")
-
+		window.location.reload()
 	}
 	
 	// Rebater a bolinha - Inverter as direções x e y
